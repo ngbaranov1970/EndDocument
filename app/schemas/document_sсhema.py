@@ -2,12 +2,14 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 class DocumentCreate(BaseModel):
+    """Схема для создания документа, содержащая информацию о названии организации, имени пользователя, дате и времени начала и окончания работ."""
     organization_name: str = Field(..., min_length=3, max_length=255, description="Название организации (3-255 символов)")
     user_name: str = Field(..., min_length=3, max_length=255, description="Имя пользователя (3-255 символов)")
     start_at: datetime = Field(..., description="Дата и время начала работ")
     end_at: datetime = Field(..., description="Дата и время окончания работ")
 
 class Document(BaseModel):
+    """Схема для отображения документа, содержащая информацию о названии организации, имени пользователя, дате и времени начала и окончания работ, а также статус документа."""
     id: int = Field(..., description="Уникальный идентификатор документа")
     organization_name: str = Field(..., description="Название организации")
     user_name: str = Field(..., description="Имя пользователя")
