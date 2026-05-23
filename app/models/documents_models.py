@@ -7,13 +7,7 @@ from app.db.database import Base
 
 class Document(Base):
     __tablename__ = "documents"
-
-    # organization_name: str = Field(..., description="Название организации")
-    # user_name: str = Field(..., description="Имя пользователя")
-    # created_at: datetime = Field(..., description="Дата и время создания документа")
-    # start_at: datetime = Field(..., description="Дата и время начала работ")
-    # end_at: datetime = Field(..., description="Дата и время окончания работ")
-    # status: bool = Field(..., description="Статус документа (активный/неактивный)")
+    """Модель документа для хранения информации о начале и окончании работ в базе данных."""
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_name: Mapped[str] = mapped_column(nullable=False)
