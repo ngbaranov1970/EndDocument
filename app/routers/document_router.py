@@ -22,7 +22,7 @@ async def create_document(document: DocumentCreate, db: AsyncSession = Depends(g
     await db.refresh(db_document)  # Для получения id и created_at из базы
     return db_document
 
-@router.get("/", response_model=DocumentSchema, status_code=status.HTTP_200_OK)
+@router.get("/", response_model=list[DocumentSchema], status_code=status.HTTP_200_OK)
 async def get_all_documents(db: AsyncSession = Depends(get_async_db)):
     """
     Возвращает список всех документов.
