@@ -6,6 +6,18 @@ const documents = ref([]);
 const loading = ref(false);
 const error = ref("");
 
+const formatDate = (value) => {
+  if (!value) return "-";
+
+  // Для строк вида YYYY-MM-DD форматируем без смещения часового пояса
+  const [year, month, day] = String(value).split("-");
+  if (year && month && day) {
+    return `${day}.${month}.${year}`;
+  }
+
+  return String(value);
+};
+
 const loadDocuments = async () => {
   loading.value = true;
   error.value = "";
@@ -29,7 +41,7 @@ onMounted(loadDocuments);
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl p-6">
+  <main class="mx-auto max-w-4xl px-2 py-6 sm:px-3">
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold">Список документов</h1>
       <button
@@ -50,19 +62,44 @@ onMounted(loadDocuments);
       Документов пока нет
     </p>
 
-    <ul v-else class="space-y-3">
-      <li
-        v-for="doc in documents"
-        :key="doc.id ?? doc.title"
-        class="rounded-xl border p-4 shadow-sm"
-      >
-        <h2 class="font-semibold">{{ doc.user_name ?? "Без названия" }}</h2>
-        <p class="mt-1 text-sm text-gray-700">{{ doc.organization_name ?? "Нет содержимого" }}</p>
+    <div v-else class="overflow-x-auto rounded-xl border shadow-sm">
+      <div class="border-b bg-gray-50 px-3 py-2 text-sm text-gray-600 sm:px-4">
+        <span class="font-medium text-gray-700">
+          {{ documents[0]?.organization_name ?? "Организация не указана" }}
+        </span>
+        <span class="ml-2 text-xs text-gray-400">
+          {{ formatDate(documents[0]?.created_at) }}
+        </span>
+      </div>
 
-        <p v-if="doc.created_at" class="mt-2 text-xs text-gray-400">
-          Создан: {{ doc.created_at }}
-        </p>
-      </li>
-    </ul>
+      <table class="min-w-full table-fixed border-collapse text-sm">
+        <colgroup>
+          <col class="w-[52%]" />
+          <col class="w-[24%]" />
+          <col class="w-[24%]" />
+        </colgroup>
+        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-3 py-2 font-medium sm:px-4">Ф.И.О. работника</th>
+            <th class="px-3 py-2 font-medium sm:px-4">Дата начала работ</th>
+            <th class="px-3 py-2 font-medium sm:px-4">Дата окончания работ</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100 bg-white">
+          <tr v-for="doc in documents" :key="doc.id ?? `${doc.user_name}-${doc.start_at}-${doc.end_at}`">
+            <td class="truncate px-3 py-3 font-medium text-gray-900 sm:px-4">
+              {{ doc.user_name ?? "-" }}
+            </td>
+            <td class="whitespace-nowrap px-3 py-3 text-gray-700 sm:px-4">
+              {{ formatDate(doc.start_at) }}
+            </td>
+            <td class="whitespace-nowrap px-3 py-3 text-gray-700 sm:px-4">
+              {{ formatDate(doc.end_at) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </main>
 </template>
