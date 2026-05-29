@@ -11,7 +11,7 @@ class DocumentCreate(BaseModel):
 class Document(BaseModel):
     """Схема для отображения документа, содержащая информацию о названии организации, имени пользователя, дате и времени начала и окончания работ, а также статус документа."""
     id: int = Field(..., description="Уникальный идентификатор документа")
-    organization_name: str = Field(..., description="Название организации")
+    organization_id: int = Field(..., description="Идентификатор организации")
     user_name: str = Field(..., description="Имя пользователя")
     created_at: date = Field(..., description="Дата и время создания документа")
     start_at: date = Field(..., description="Дата и время начала работ")
@@ -19,3 +19,10 @@ class Document(BaseModel):
     status: bool = Field(..., description="Статус документа (активный/неактивный)")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentsByOrganization(BaseModel):
+    """Схема ответа для группировки документов по организациям."""
+    organization_id: int = Field(..., description="Идентификатор организации")
+    organization_name: str = Field(..., description="Название организации")
+    documents: list[Document] = Field(default_factory=list, description="Документы организации")
