@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.db.database import Base
 from app.models.documents_models import Document
+from app.models.organizations_models import Organization  # noqa: F401 — нужен для регистрации метаданных
 
 from app.config import settings
 # this is the Alembic Config object, which provides
