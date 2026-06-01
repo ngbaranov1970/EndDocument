@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,12 +19,19 @@ router = APIRouter(
 @router.post("/", response_model=DocumentSchema, status_code=status.HTTP_201_CREATED)
 async def create_document(document: DocumentCreate, db: AsyncSession = Depends(get_async_db)):
     """
-    Создаёт новый документ, сохраняющий информацию о начале и окончании работ.
+    Создаёт новый документ. Проверяет, что организация с указанным id существует.
     """
+    org = await db.get(OrganizationModel, document.organization_id)
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Организация с id={document.organization_id} не найдена",
+        )
+
     db_document = DocumentModel(**document.model_dump())
     db.add(db_document)
     await db.commit()
-    await db.refresh(db_document)  # Для получения id и created_at из базы
+    await db.refresh(db_document)
     return db_document
 
 @router.get("/", response_model=list[DocumentsByOrganization], status_code=status.HTTP_200_OK)

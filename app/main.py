@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import document_router
+from app.routers import organization_router
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,3 +21,4 @@ app.add_middleware(
 )
 
 app.include_router(document_router.router)
+app.include_router(organization_router.router)
