@@ -96,9 +96,10 @@ onMounted(loadDocuments);
         <!-- Таблица документов этой организации -->
         <table class="min-w-full table-fixed border-collapse text-sm">
           <colgroup>
-            <col class="w-[52%]" />
-            <col class="w-[24%]" />
-            <col class="w-[24%]" />
+            <col class="w-[46%]" />
+            <col class="w-[20%]" />
+            <col class="w-[20%]" />
+            <col class="w-[14%]" />
           </colgroup>
 
           <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
@@ -106,6 +107,7 @@ onMounted(loadDocuments);
               <th class="px-4 py-2 font-medium">Ф.И.О. работника</th>
               <th class="px-4 py-2 font-medium">Дата начала работ</th>
               <th class="px-4 py-2 font-medium">Дата окончания работ</th>
+              <th class="px-4 py-2 font-medium">Действия</th>
             </tr>
           </thead>
 
@@ -135,6 +137,14 @@ onMounted(loadDocuments);
                 :class="isInactive(doc.status) ? 'text-red-700' : 'text-gray-700'"
               >
                 {{ formatDate(doc.end_at) }}
+              </td>
+              <td class="px-4 py-3">
+                <RouterLink
+                  :to="`/documents/${doc.id}/edit`"
+                  class="inline-flex rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  Редактировать
+                </RouterLink>
               </td>
             </tr>
           </tbody>

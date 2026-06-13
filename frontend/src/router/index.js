@@ -14,6 +14,11 @@ const routes = [
     component: () => import("../views/CreateDocumentView.vue"),
   },
   {
+    path: "/documents/:document_id/edit",
+    name: "edit-document",
+    component: () => import("../views/EditDocumentView.vue"),
+  },
+  {
     path: "/organizations/create",
     name: "create-organization",
     component: () => import("../views/CreateOrganizationView.vue"),

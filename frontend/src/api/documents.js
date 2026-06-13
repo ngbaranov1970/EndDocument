@@ -11,3 +11,8 @@ export const createDocument = async (document) => {
     return data;
 };
 
+export const updateDocument = async (documentId, document) => {
+    const { data } = await api.put(`/documents/${documentId}`, document);
+    return data;
+};
+
