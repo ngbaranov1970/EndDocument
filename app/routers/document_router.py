@@ -99,3 +99,18 @@ async def update_document(document_id: int, document: DocumentCreate, db: AsyncS
     await db.commit()
     await db.refresh(db_document)
     return db_document
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(document_id: int, db: AsyncSession = Depends(get_async_db)):
+    """
+    Удаляет существующий документ. Проверяет, что документ с указанным id существует.
+    """
+    db_document = await db.get(DocumentModel, document_id)
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Документ с id={document_id} не найден",
+        )
+
+    await db.delete(db_document)
+    await db.commit()
