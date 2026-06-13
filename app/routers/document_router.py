@@ -73,3 +73,29 @@ async def get_all_documents(db: AsyncSession = Depends(get_async_db)):
         )
 
     return list(grouped_documents.values())
+
+@router.put("/{document_id}", response_model=DocumentSchema, status_code=status.HTTP_200_OK)
+async def update_document(document_id: int, document: DocumentCreate, db: AsyncSession = Depends(get_async_db)):
+    """
+    Обновляет существующий документ. Проверяет, что документ с указанным id существует, а также что организация с указанным id существует.
+    """
+    db_document = await db.get(DocumentModel, document_id)
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Документ с id={document_id} не найден",
+        )
+
+    org = await db.get(OrganizationModel, document.organization_id)
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Организация с id={document.organization_id} не найдена",
+        )
+
+    for key, value in document.model_dump().items():
+        setattr(db_document, key, value)
+
+    await db.commit()
+    await db.refresh(db_document)
+    return db_document
