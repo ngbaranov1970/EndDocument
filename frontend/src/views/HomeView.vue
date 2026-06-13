@@ -18,6 +18,8 @@ const formatDate = (value) => {
   return String(value);
 };
 
+const isInactive = (status) => status === false;
+
 /**
  * Загружает документы с бэкенда.
  * Бэк возвращает list[DocumentsByOrganization]:
@@ -111,15 +113,27 @@ onMounted(loadDocuments);
             <tr
               v-for="doc in group.documents"
               :key="doc.id"
-              class="hover:bg-gray-50"
+              :class="[
+                'hover:bg-gray-50',
+                { 'bg-red-50 hover:bg-red-100': isInactive(doc.status) }
+              ]"
             >
-              <td class="truncate px-4 py-3 font-medium text-gray-900">
+              <td
+                class="truncate px-4 py-3 font-medium"
+                :class="isInactive(doc.status) ? 'text-red-900' : 'text-gray-900'"
+              >
                 {{ doc.user_name ?? "-" }}
               </td>
-              <td class="whitespace-nowrap px-4 py-3 text-gray-700">
+              <td
+                class="whitespace-nowrap px-4 py-3"
+                :class="isInactive(doc.status) ? 'text-red-700' : 'text-gray-700'"
+              >
                 {{ formatDate(doc.start_at) }}
               </td>
-              <td class="whitespace-nowrap px-4 py-3 text-gray-700">
+              <td
+                class="whitespace-nowrap px-4 py-3"
+                :class="isInactive(doc.status) ? 'text-red-700' : 'text-gray-700'"
+              >
                 {{ formatDate(doc.end_at) }}
               </td>
             </tr>

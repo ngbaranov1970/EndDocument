@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date
 
 from app.db.db_depends import get_async_db
 from app.models.documents_models import Document as DocumentModel
@@ -39,6 +40,15 @@ async def get_all_documents(db: AsyncSession = Depends(get_async_db)):
     """
     Возвращает документы, сгруппированные по организациям.
     """
+    # Ищем все документы у которых дата окончания меньше текущей даты, то есть которые уже закончились и меняем их статус на false
+    result = await db.execute(
+        select(DocumentModel).where(DocumentModel.end_at < date.today())
+    )
+    expired_documents = result.scalars().all()
+    for document in expired_documents:
+        document.status = False
+    await db.commit()
+
 
     # Выполняем запрос, который объединяет таблицы организаций и документов, сортируя результаты по идентификаторам организаций и документов
     result = await db.execute(
