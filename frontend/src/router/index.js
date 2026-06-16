@@ -23,6 +23,11 @@ const routes = [
     name: "create-organization",
     component: () => import("../views/CreateOrganizationView.vue"),
   },
+  {
+    path: "/archive",
+    name: "archive",
+    component: () => import("../views/ArchiveView.vue"),
+  },
 ];
 
 const router = createRouter({

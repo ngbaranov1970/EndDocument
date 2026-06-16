@@ -16,7 +16,7 @@ class Document(BaseModel):
     created_at: date = Field(..., description="Дата и время создания документа")
     start_at: date = Field(..., description="Дата и время начала работ")
     end_at: date = Field(..., description="Дата и время окончания работ")
-    status: bool = Field(..., description="Статус документа (активный/неактивный)")
+    is_archived: bool = Field(..., description="Статус архивации документа")
 
     model_config = ConfigDict(from_attributes=True)
 

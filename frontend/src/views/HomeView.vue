@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { fetchDocuments } from "../api/documents.js";
+import { fetchDocuments, archiveDocument } from "../api/documents.js";
+
 
 // Состояния
 const groups = ref([]); // список групп: { organization_id, organization_name, documents[] }
@@ -18,7 +19,34 @@ const formatDate = (value) => {
   return String(value);
 };
 
-const isInactive = (status) => status === false;
+/**
+ * Документ считается просроченным, если end_at раньше сегодняшней даты.
+ * Поддерживаем форматы: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss и DD.MM.YYYY.
+ */
+const isInactive = (doc) => {
+  const raw = doc?.end_at;
+  if (!raw) return false;
+
+  const value = String(raw);
+  let year;
+  let month;
+  let day;
+
+  if (value.includes("-")) {
+    [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  } else if (value.includes(".")) {
+    [day, month, year] = value.slice(0, 10).split(".").map(Number);
+  } else {
+    return false;
+  }
+
+  if (!year || !month || !day) return false;
+
+  const endDate = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return endDate < today;
+};
 
 /**
  * Загружает документы с бэкенда.
@@ -40,6 +68,25 @@ const loadDocuments = async () => {
       "Не удалось загрузить документы";
   } finally {
     loading.value = false;
+  }
+};
+
+/**
+ * Отправляет запрос на архивирование документа.
+ * После успешного ответа перезагружает список документов.
+ */
+const archivingId = ref(null); // id документа, который сейчас архивируется
+
+const handleArchive = async (docId) => {
+  if (!confirm("Перенести документ в архив?")) return;
+  archivingId.value = docId;
+  try {
+    await archiveDocument(docId);
+    await loadDocuments(); // перезагрузить список
+  } catch (e) {
+    alert(e?.response?.data?.detail || "Не удалось архивировать документ");
+  } finally {
+    archivingId.value = null;
   }
 };
 
@@ -117,36 +164,46 @@ onMounted(loadDocuments);
               :key="doc.id"
               :class="[
                 'hover:bg-gray-50',
-                { 'bg-red-50 hover:bg-red-100': isInactive(doc.status) }
+                { 'bg-red-50 hover:bg-red-100': isInactive(doc) }
               ]"
             >
               <td
                 class="truncate px-4 py-3 font-medium"
-                :class="isInactive(doc.status) ? 'text-red-900' : 'text-gray-900'"
+                :class="isInactive(doc) ? 'text-red-900' : 'text-gray-900'"
               >
                 {{ doc.user_name ?? "-" }}
               </td>
               <td
                 class="whitespace-nowrap px-4 py-3"
-                :class="isInactive(doc.status) ? 'text-red-700' : 'text-gray-700'"
+                :class="isInactive(doc) ? 'text-red-700' : 'text-gray-700'"
               >
                 {{ formatDate(doc.start_at) }}
               </td>
               <td
                 class="whitespace-nowrap px-4 py-3"
-                :class="isInactive(doc.status) ? 'text-red-700' : 'text-gray-700'"
+                :class="isInactive(doc) ? 'text-red-700' : 'text-gray-700'"
               >
                 {{ formatDate(doc.end_at) }}
               </td>
               <td class="px-4 py-3">
-                <RouterLink
-                  :to="`/documents/${doc.id}/edit`"
-                  class="inline-flex rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
-                >
-                  Редактировать
-                </RouterLink>
+                <div class="flex gap-2">
+                  <RouterLink
+                    :to="`/documents/${doc.id}/edit`"
+                    class="inline-flex rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Редактировать
+                  </RouterLink>
+                  <button
+                    @click="handleArchive(doc.id)"
+                    :disabled="archivingId === doc.id"
+                    class="inline-flex rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+                  >
+                    {{ archivingId === doc.id ? "..." : "В архив" }}
+                  </button>
+                </div>
               </td>
             </tr>
+
           </tbody>
         </table>
       </div>
@@ -154,4 +211,6 @@ onMounted(loadDocuments);
 
   </main>
 </template>
+
+
 

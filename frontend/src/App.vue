@@ -18,6 +18,14 @@
           </RouterLink>
 
           <RouterLink
+            to="/archive"
+            class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            active-class="bg-gray-100"
+          >
+            Архив
+          </RouterLink>
+
+          <RouterLink
             to="/create"
             class="rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
             active-class="opacity-80"

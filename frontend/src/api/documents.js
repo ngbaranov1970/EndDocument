@@ -16,3 +16,17 @@ export const updateDocument = async (documentId, document) => {
     return data;
 };
 
+export const archiveDocument = async (documentId) => {
+    const { data } = await api.put(`/documents/${documentId}/archive`);
+    return data;
+};
+
+export const fetchArchivedDocuments = async () => {
+    const { data } = await api.get("/documents/archived");
+    return data;
+};
+
+export const restoreDocument = async (documentId) => {
+    const { data } = await api.put(`/documents/${documentId}/restore`);
+    return data;
+};

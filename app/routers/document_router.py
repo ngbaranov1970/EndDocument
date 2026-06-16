@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import date
 
 from app.db.db_depends import get_async_db
 from app.models.documents_models import Document as DocumentModel
@@ -30,6 +29,7 @@ async def create_document(document: DocumentCreate, db: AsyncSession = Depends(g
         )
 
     db_document = DocumentModel(**document.model_dump())
+
     db.add(db_document)
     await db.commit()
     await db.refresh(db_document)
@@ -38,25 +38,15 @@ async def create_document(document: DocumentCreate, db: AsyncSession = Depends(g
 @router.get("/", response_model=list[DocumentsByOrganization], status_code=status.HTTP_200_OK)
 async def get_all_documents(db: AsyncSession = Depends(get_async_db)):
     """
-    Возвращает документы, сгруппированные по организациям.
+    Возвращает неархивные документы, сгруппированные по организациям.
     """
-    # Ищем все документы у которых дата окончания меньше текущей даты, то есть которые уже закончились и меняем их статус на false
-    result = await db.execute(
-        select(DocumentModel).where(DocumentModel.end_at < date.today())
-    )
-    expired_documents = result.scalars().all()
-    for document in expired_documents:
-        document.status = False
-    await db.commit()
 
-
-    # Выполняем запрос, который объединяет таблицы организаций и документов, сортируя результаты по идентификаторам организаций и документов
     result = await db.execute(
         select(OrganizationModel, DocumentModel)
         .join(DocumentModel, DocumentModel.organization_id == OrganizationModel.id)
+        .where(DocumentModel.is_archived.is_(False))
         .order_by(OrganizationModel.id, DocumentModel.id)
     )
-    # Получаем все строки результата запроса, каждая из которых содержит объект организации и связанный с ней документ
     rows = result.all()
 
     grouped_documents: dict[int, DocumentsByOrganization] = {}
@@ -86,6 +76,7 @@ async def update_document(document_id: int, document: DocumentCreate, db: AsyncS
             detail=f"Документ с id={document_id} не найден",
         )
 
+
     org = await db.get(OrganizationModel, document.organization_id)
     if not org:
         raise HTTPException(
@@ -95,6 +86,7 @@ async def update_document(document_id: int, document: DocumentCreate, db: AsyncS
 
     for key, value in document.model_dump().items():
         setattr(db_document, key, value)
+
 
     await db.commit()
     await db.refresh(db_document)
@@ -111,6 +103,7 @@ async def delete_document(document_id: int, db: AsyncSession = Depends(get_async
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Документ с id={document_id} не найден",
         )
+
 
     await db.delete(db_document)
     await db.commit()
