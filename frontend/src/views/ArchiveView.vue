@@ -1,11 +1,16 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { fetchArchivedDocuments, restoreDocument } from "../api/documents.js";
+import {
+  deleteDocument,
+  fetchArchivedDocuments,
+  restoreDocument,
+} from "../api/documents.js";
 
 const groups = ref([]);
 const loading = ref(false);
 const error = ref("");
 const restoringId = ref(null);
+const deletingId = ref(null);
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -47,6 +52,20 @@ const handleRestore = async (docId) => {
     alert(e?.response?.data?.detail || "Не удалось вернуть документ из архива");
   } finally {
     restoringId.value = null;
+  }
+};
+
+const handleDelete = async (docId) => {
+  if (!confirm("Удалить документ безвозвратно?")) return;
+
+  deletingId.value = docId;
+  try {
+    await deleteDocument(docId);
+    await loadArchivedDocuments();
+  } catch (e) {
+    alert(e?.response?.data?.detail || "Не удалось удалить документ");
+  } finally {
+    deletingId.value = null;
   }
 };
 
@@ -119,13 +138,22 @@ onMounted(loadArchivedDocuments);
                 {{ formatDate(doc.end_at) }}
               </td>
               <td class="px-4 py-3">
-                <button
-                  @click="handleRestore(doc.id)"
-                  :disabled="restoringId === doc.id"
-                  class="inline-flex rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-                >
-                  {{ restoringId === doc.id ? "..." : "Восстановить" }}
-                </button>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    @click="handleRestore(doc.id)"
+                    :disabled="restoringId === doc.id || deletingId === doc.id"
+                    class="inline-flex rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                  >
+                    {{ restoringId === doc.id ? "..." : "Восстановить" }}
+                  </button>
+                  <button
+                    @click="handleDelete(doc.id)"
+                    :disabled="deletingId === doc.id || restoringId === doc.id"
+                    class="inline-flex rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                  >
+                    {{ deletingId === doc.id ? "..." : "Удалить" }}
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

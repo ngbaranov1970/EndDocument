@@ -16,6 +16,10 @@ export const updateDocument = async (documentId, document) => {
     return data;
 };
 
+export const deleteDocument = async (documentId) => {
+    await api.delete(`/documents/${documentId}`);
+};
+
 export const archiveDocument = async (documentId) => {
     const { data } = await api.put(`/documents/${documentId}/archive`);
     return data;

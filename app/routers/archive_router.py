@@ -76,3 +76,20 @@ async def restore_document(document_id: int, db: AsyncSession = Depends(get_asyn
     Возвращает документ из архива.
     """
     return await _set_archived_state(document_id, False, db)
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(document_id: int, db: AsyncSession = Depends(get_async_db)):
+    """
+    Безвозвратно удаляет документ.
+    """
+    db_document = await db.get(DocumentModel, document_id)
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Документ с id={document_id} не найден",
+        )
+
+    await db.delete(db_document)
+    await db.commit()
+
