@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 asyncpg
+bcrypt
 pydantic-settings
 python-dotenv
 pydantic

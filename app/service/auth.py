@@ -1,19 +1,20 @@
-from passlib.context import CryptContext
-
-
-# Создаём контекст для хеширования с использованием bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 
 def hash_password(password: str) -> str:
     """
     Преобразует пароль в хеш с использованием bcrypt.
+    Обрезает пароль до 72 байт (ограничение алгоритма bcrypt).
     """
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Проверяет, соответствует ли введённый пароль сохранённому хешу.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8")[:72],
+        hashed_password.encode("utf-8"),
+    )
