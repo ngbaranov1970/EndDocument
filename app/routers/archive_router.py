@@ -6,10 +6,12 @@ from app.db.db_depends import get_async_db
 from app.models.documents_models import Document as DocumentModel
 from app.models.organizations_models import Organization as OrganizationModel
 from app.schemas.document_sсhema import Document as DocumentSchema, DocumentsByOrganization
+from app.service.auth import get_current_user
 
 router = APIRouter(
     prefix="/documents",
     tags=["documents-archive"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     db_host: str
     db_port: int = 5432
 
+    # JWT
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
+
     @property
     def async_db_url(self) -> str:
         """Construct the asynchronous database URL."""

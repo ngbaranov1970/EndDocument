@@ -1,11 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from app.models.users_model import User as UserModel
-from app.schemas.user_schema import UserCreate, User as UserSchema
+from app.schemas.user_schema import (
+    UserCreate,
+    UserLogin,
+    Token,
+    User as UserSchema,
+    UserAdminView,
+)
 from app.db.db_depends import get_async_db
-from app.service.auth import hash_password
+from app.service.auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_current_superuser,
+)
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -14,15 +27,21 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_async_db)):
     """
-    Регистрирует нового пользователя. Уникальность username и email гарантируется
-    на уровне базы данных (UNIQUE constraint) — при конфликте возвращается 409.
+    Регистрирует нового пользователя.
+    Первый зарегистрированный пользователь автоматически получает статус
+    суперпользователя и активируется. Все последующие — неактивны до одобрения.
     """
+    # Считаем количество существующих пользователей
+    count_result = await db.execute(select(func.count()).select_from(UserModel))
+    user_count = count_result.scalar()
+    is_first = user_count == 0
 
     db_user = UserModel(
         username=user.username,
         hashed_password=hash_password(user.password),
         email=user.email,
-        is_active=True,
+        is_active=is_first,       # первый пользователь сразу активен
+        is_superuser=is_first,    # первый пользователь — суперпользователь
     )
 
     db.add(db_user)
@@ -37,3 +56,94 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_async_db)
 
     await db.refresh(db_user)
     return db_user
+
+
+@router.post("/login", response_model=Token)
+async def login(user_login: UserLogin, db: AsyncSession = Depends(get_async_db)):
+    """
+    Аутентифицирует пользователя по username и паролю.
+    Возвращает JWT access-токен. Неактивные пользователи не могут войти.
+    """
+    result = await db.execute(
+        select(UserModel).where(UserModel.username == user_login.username)
+    )
+    db_user = result.scalar_one_or_none()
+
+    if db_user is None or not verify_password(
+        user_login.password, db_user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
+
+    if not db_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is not activated. Please contact the administrator.",
+        )
+
+    access_token = create_access_token(data={"sub": db_user.username})
+    return Token(access_token=access_token)
+
+
+@router.get("/me", response_model=UserSchema)
+async def read_current_user(
+    current_user: UserModel = Depends(get_current_user),
+):
+    """Возвращает информацию о текущем аутентифицированном пользователе."""
+    return current_user
+
+
+# ---------------------------------------------------------------------------
+# Административные эндпоинты (только для суперпользователей)
+# ---------------------------------------------------------------------------
+
+@router.get("/admin/list", response_model=list[UserAdminView])
+async def list_users(
+    db: AsyncSession = Depends(get_async_db),
+    _: UserModel = Depends(get_current_superuser),
+):
+    """Возвращает список всех пользователей (только для суперпользователей)."""
+    result = await db.execute(select(UserModel).order_by(UserModel.created_at))
+    return result.scalars().all()
+
+
+@router.patch("/admin/{user_id}/activate", response_model=UserAdminView)
+async def activate_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    _: UserModel = Depends(get_current_superuser),
+):
+    """Активирует пользователя (только для суперпользователей)."""
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user.is_active = True
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+@router.patch("/admin/{user_id}/deactivate", response_model=UserAdminView)
+async def deactivate_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_admin: UserModel = Depends(get_current_superuser),
+):
+    """Деактивирует пользователя (только для суперпользователей)."""
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user.id == current_admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot deactivate yourself",
+        )
+    user.is_active = False
+    await db.commit()
+    await db.refresh(user)
+    return user
+

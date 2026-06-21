@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_depends import get_async_db
 from app.models.organizations_models import Organization as OrganizationModel
 from app.schemas.organization_schema import OrganizationCreate, Organization as OrganizationSchema
+from app.service.auth import get_current_user
 
 router = APIRouter(
     prefix="/organizations",
     tags=["organizations"],
+    dependencies=[Depends(get_current_user)],
 )
 
 

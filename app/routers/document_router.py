@@ -10,10 +10,12 @@ from app.schemas.document_sсhema import (
     Document as DocumentSchema,
     DocumentsByOrganization,
 )
+from app.service.auth import get_current_user
 
 router = APIRouter(
     prefix="/documents",
     tags=["documents"],
+    dependencies=[Depends(get_current_user)],
 )
 
 @router.post("/", response_model=DocumentSchema, status_code=status.HTTP_201_CREATED)
