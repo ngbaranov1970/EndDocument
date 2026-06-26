@@ -3,7 +3,7 @@ import { fetchCurrentUser } from "../api/auth.js";
 
 /**
  * Глобальное реактивное состояние аутентификации (синглтон).
- * Токен сохраняется в localStorage для persistence между перезагрузками.
+ * Токены сохраняются в localStorage для persistence между перезагрузками.
  */
 const state = reactive({
   token: localStorage.getItem("access_token") || null,
@@ -13,15 +13,20 @@ const state = reactive({
 export function useAuth() {
   const isAuthenticated = () => !!state.token;
 
-  const setToken = (token) => {
-    state.token = token;
-    localStorage.setItem("access_token", token);
+  /**
+   * Сохраняет пару токенов (access + refresh) в localStorage и стейте.
+   */
+  const setTokens = (accessToken, refreshToken) => {
+    state.token = accessToken;
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
   };
 
   const logout = () => {
     state.token = null;
     state.user = null;
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
   };
 
   /**
@@ -37,5 +42,5 @@ export function useAuth() {
     }
   };
 
-  return { state, isAuthenticated, setToken, logout, fetchUser };
+  return { state, isAuthenticated, setTokens, logout, fetchUser };
 }

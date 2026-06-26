@@ -8,6 +8,7 @@ from app.schemas.user_schema import (
     UserCreate,
     UserLogin,
     Token,
+    TokenRefresh,
     User as UserSchema,
     UserAdminView,
 )
@@ -16,6 +17,9 @@ from app.service.auth import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
+    save_refresh_token_hash,
+    verify_and_invalidate_refresh_token,
     get_current_user,
     get_current_superuser,
 )
@@ -62,7 +66,8 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_async_db)
 async def login(user_login: UserLogin, db: AsyncSession = Depends(get_async_db)):
     """
     Аутентифицирует пользователя по username и паролю.
-    Возвращает JWT access-токен. Неактивные пользователи не могут войти.
+    Возвращает пару токенов: access (короткоживущий) и refresh (долгоживущий).
+    Неактивные пользователи не могут войти.
     """
     result = await db.execute(
         select(UserModel).where(UserModel.username == user_login.username)
@@ -83,8 +88,34 @@ async def login(user_login: UserLogin, db: AsyncSession = Depends(get_async_db))
             detail="Account is not activated. Please contact the administrator.",
         )
 
+    # Создаём оба токена
     access_token = create_access_token(data={"sub": db_user.username})
-    return Token(access_token=access_token)
+    refresh_token = create_refresh_token(data={"sub": db_user.username})
+
+    # Сохраняем хеш refresh-токена в БД
+    await save_refresh_token_hash(db, db_user.username, refresh_token)
+
+    return Token(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_tokens(
+    body: TokenRefresh,
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Обновляет пару токенов по валидному refresh-токену.
+    Старый refresh-токен при этом инвалидируется (ротация).
+    Клиент должен использовать новый refresh_token из ответа.
+    """
+    username = await verify_and_invalidate_refresh_token(db, body.refresh_token)
+
+    # Выдаём новую пару
+    new_access = create_access_token(data={"sub": username})
+    new_refresh = create_refresh_token(data={"sub": username})
+    await save_refresh_token_hash(db, username, new_refresh)
+
+    return Token(access_token=new_access, refresh_token=new_refresh)
 
 
 @router.get("/me", response_model=UserSchema)

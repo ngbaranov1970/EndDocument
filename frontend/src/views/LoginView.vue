@@ -5,7 +5,7 @@ import { loginUser } from "../api/auth.js";
 import { useAuth } from "../store/auth.js";
 
 const router = useRouter();
-const { setToken, fetchUser } = useAuth();
+const { setTokens, fetchUser } = useAuth();
 
 const form = reactive({ username: "", password: "" });
 const loading = ref(false);
@@ -21,7 +21,7 @@ const handleSubmit = async () => {
   loading.value = true;
   try {
     const data = await loginUser(form.username.trim(), form.password);
-    setToken(data.access_token);
+    setTokens(data.access_token, data.refresh_token);
     await fetchUser();
     router.push("/");
   } catch (e) {

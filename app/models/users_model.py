@@ -18,6 +18,9 @@ class User(Base):
     is_superuser: Mapped[bool] = mapped_column(nullable=False, server_default="false")
 
     email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    refresh_token_hash: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, default=None
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

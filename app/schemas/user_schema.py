@@ -16,9 +16,15 @@ class UserLogin(BaseModel):
 
 
 class Token(BaseModel):
-    """Схема JWT-токена."""
+    """Схема ответа с access- и refresh-токенами при логине или обновлении."""
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
+
+
+class TokenRefresh(BaseModel):
+    """Схема запроса для обновления токенов — клиент присылает refresh_token."""
+    refresh_token: str
 
 
 class TokenData(BaseModel):
