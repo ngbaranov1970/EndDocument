@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # База лежит в томе — переживает пересборку и перезапуск контейнера
+      db_name: /data/enddocument.db
+    volumes:
+      - db_data:/data
+    # Порт наружу не публикуем: к бэкенду ходит только nginx по внутренней сети
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

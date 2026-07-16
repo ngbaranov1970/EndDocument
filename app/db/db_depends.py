@@ -4,7 +4,7 @@ from app.db.database import async_session_maker
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    Предоставляет асинхронную сессию SQLAlchemy для работы с базой данных PostgreSQL.
+    Предоставляет асинхронную сессию SQLAlchemy для работы с базой данных.
     """
     async with async_session_maker() as session:
         yield session
