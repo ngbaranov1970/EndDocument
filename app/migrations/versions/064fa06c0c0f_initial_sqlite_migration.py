@@ -24,15 +24,15 @@ def upgrade() -> None:
     op.create_table('organizations',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('1'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=50), nullable=False),
     sa.Column('hashed_password', sa.String(length=255), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default='false', nullable=False),
-    sa.Column('is_superuser', sa.Boolean(), server_default='false', nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('is_superuser', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=True),
     sa.Column('refresh_token_hash', sa.String(length=64), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
@@ -47,7 +47,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.Date(), server_default=sa.text('(CURRENT_DATE)'), nullable=False),
     sa.Column('start_at', sa.Date(), nullable=False),
     sa.Column('end_at', sa.Date(), nullable=False),
-    sa.Column('is_archived', sa.Boolean(), server_default=sa.text('(false)'), nullable=False),
+    sa.Column('is_archived', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.ForeignKeyConstraint(['organization_id'], ['organizations.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

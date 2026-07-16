@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, DateTime, func
+from sqlalchemy import String, DateTime, func, text
 
 from app.db.database import Base
 
@@ -14,8 +14,10 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(nullable=False, server_default="false")
-    is_superuser: Mapped[bool] = mapped_column(nullable=False, server_default="false")
+    # server_default только как text("0")/text("1"): строка "false" стала бы
+    # текстовым литералом DEFAULT 'false' в SQLite (см. organizations_models.py)
+    is_active: Mapped[bool] = mapped_column(nullable=False, server_default=text("0"))
+    is_superuser: Mapped[bool] = mapped_column(nullable=False, server_default=text("0"))
 
     email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     refresh_token_hash: Mapped[str | None] = mapped_column(

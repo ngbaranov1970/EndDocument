@@ -19,7 +19,7 @@ class Document(Base):
     created_at: Mapped[date] = mapped_column(Date, server_default=func.current_date(), nullable=False)
     start_at: Mapped[date] = mapped_column(Date, nullable=False)
     end_at: Mapped[date] = mapped_column(Date, nullable=False)
-    is_archived: Mapped[bool] = mapped_column(nullable=False, server_default=text("false"))
+    is_archived: Mapped[bool] = mapped_column(nullable=False, server_default=text("0"))
 
     organization: Mapped["Organization"] = relationship("Organization", back_populates="documents")
 
