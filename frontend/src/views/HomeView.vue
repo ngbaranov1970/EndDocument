@@ -8,6 +8,20 @@ const groups = ref([]); // список групп: { organization_id, organizat
 const loading = ref(false);
 const error = ref("");
 
+// Множество id организаций, чьи списки документов сейчас развёрнуты.
+// По умолчанию все группы свёрнуты, чтобы длинный список не занимал весь экран.
+const expandedIds = ref(new Set());
+
+const toggleGroup = (organizationId) => {
+  const next = new Set(expandedIds.value);
+  if (next.has(organizationId)) {
+    next.delete(organizationId);
+  } else {
+    next.add(organizationId);
+  }
+  expandedIds.value = next;
+};
+
 /**
  * Форматирует дату из "YYYY-MM-DD" в "DD.MM.YYYY".
  * Разбираем строку вручную, чтобы избежать сдвига часового пояса.
@@ -47,6 +61,12 @@ const isInactive = (doc) => {
   today.setHours(0, 0, 0, 0);
   return endDate < today;
 };
+
+/**
+ * Организация считается просроченной, если среди её документов
+ * есть хотя бы один просроченный (используется для подсветки шапки группы).
+ */
+const hasInactiveDocuments = (group) => group.documents.some(isInactive);
 
 /**
  * Загружает документы с бэкенда.
@@ -132,16 +152,47 @@ onMounted(loadDocuments);
         :key="group.organization_id"
         class="overflow-x-auto rounded-xl border shadow-sm"
       >
-        <!-- Шапка группы: название организации -->
-        <div class="border-b bg-gray-50 px-4 py-2 text-sm">
-          <span class="font-semibold text-gray-800">{{ group.organization_name }}</span>
-          <span class="ml-2 text-xs text-gray-400">
-            ID {{ group.organization_id }}
+        <!-- Шапка группы: название организации, клик сворачивает/разворачивает список -->
+        <button
+          type="button"
+          @click="toggleGroup(group.organization_id)"
+          class="flex w-full items-center justify-between border-b px-4 py-2 text-left text-sm"
+          :class="
+            hasInactiveDocuments(group)
+              ? 'bg-red-50 hover:bg-red-100'
+              : 'bg-gray-50 hover:bg-gray-100'
+          "
+        >
+          <span>
+            <span
+              class="font-semibold"
+              :class="hasInactiveDocuments(group) ? 'text-red-900' : 'text-gray-800'"
+            >
+              {{ group.organization_name }}
+            </span>
+            <span class="ml-2 text-xs" :class="hasInactiveDocuments(group) ? 'text-red-400' : 'text-gray-400'">
+              ID {{ group.organization_id }}
+            </span>
+            <span class="ml-2 text-xs" :class="hasInactiveDocuments(group) ? 'text-red-400' : 'text-gray-400'">
+              ({{ group.documents.length }})
+            </span>
           </span>
-        </div>
+          <span
+            class="ml-2 transition-transform duration-150"
+            :class="[
+              hasInactiveDocuments(group) ? 'text-red-400' : 'text-gray-400',
+              { 'rotate-180': expandedIds.has(group.organization_id) },
+            ]"
+          >
+            ▼
+          </span>
+        </button>
 
-        <!-- Таблица документов этой организации -->
-        <table class="min-w-full table-fixed border-collapse text-sm">
+        <!-- Таблица документов этой организации: показывается только когда группа развёрнута -->
+        <table
+          v-if="expandedIds.has(group.organization_id)"
+          class="min-w-full table-fixed border-collapse text-sm"
+        >
           <colgroup>
             <col class="w-[46%]" />
             <col class="w-[20%]" />

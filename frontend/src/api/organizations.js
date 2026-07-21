@@ -18,3 +18,20 @@ export const createOrganization = async (payload) => {
   return data;
 };
 
+/**
+ * PUT /organizations/{id}
+ * Переименовывает организацию.
+ */
+export const updateOrganization = async (id, payload) => {
+  const { data } = await api.put(`/organizations/${id}`, payload);
+  return data;
+};
+
+/**
+ * DELETE /organizations/{id}
+ * Удаляет организацию.
+ */
+export const deleteOrganization = async (id) => {
+  await api.delete(`/organizations/${id}`);
+};
+

@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -18,7 +22,7 @@ class Settings(BaseSettings):
         return f"sqlite+aiosqlite:///{self.db_name}"
 
     class Config:
-        env_file = ".env"
+        env_file = BASE_DIR / ".env"
         env_file_encoding = "utf-8"
 
 

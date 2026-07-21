@@ -33,7 +33,7 @@ const handleLogout = () => {
             <RouterLink
               to="/"
               class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              active-class="bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               Список
             </RouterLink>
@@ -41,23 +41,23 @@ const handleLogout = () => {
             <RouterLink
               to="/archive"
               class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              active-class="bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               Архив
             </RouterLink>
 
             <RouterLink
               to="/create"
-              class="rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-              active-class="opacity-80"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               + Создать
             </RouterLink>
 
             <RouterLink
               to="/organizations/create"
-              class="rounded-lg border px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              active-class="bg-gray-100"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               + Организация
             </RouterLink>
@@ -70,7 +70,7 @@ const handleLogout = () => {
               v-if="state.user?.is_superuser"
               to="/admin/users"
               class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              active-class="bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               👥 Пользователи
             </RouterLink>
@@ -94,14 +94,14 @@ const handleLogout = () => {
             <RouterLink
               to="/login"
               class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              active-class="bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               Войти
             </RouterLink>
             <RouterLink
               to="/register"
-              class="rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-              active-class="opacity-80"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              active-class="bg-black text-white hover:bg-black"
             >
               Регистрация
             </RouterLink>
